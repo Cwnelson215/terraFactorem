@@ -1,0 +1,14 @@
+config:
+  aws:region: us-east-1
+  terrafactorem:appName: terrafactorem
+  terrafactorem:subdomain: terrafactorem
+  terrafactorem:platformStack: cwnelson/portfolio-platform/dev
+  terrafactorem:cpu: "256"
+  terrafactorem:memory: "512"
+  terrafactorem:desiredCount: "1"
+  terrafactorem:containerPort: "3000"
+  terrafactorem:useFargateSpot: "true"
+  terrafactorem:enableScheduledScaling: "true"
+  terrafactorem:scaleUpHour: "6"
+  terrafactorem:scaleDownHour: "22"
+  terrafactorem:scheduleTimezone: "America/Denver"
