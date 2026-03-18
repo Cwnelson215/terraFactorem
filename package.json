@@ -4,7 +4,10 @@
   "description": "Infrastructure for terrafactorem",
   "main": "index.ts",
   "scripts": {
-    "build": "tsc",
+    "postinstall": "cd src && npm install",
+    "dev": "cd src && npm run dev",
+    "build": "cd src && npm run build",
+    "start": "cd src && npm start",
     "preview": "pulumi preview",
     "up": "pulumi up",
     "destroy": "pulumi destroy"

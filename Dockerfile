@@ -1,12 +1,16 @@
 # ---- Build stage ----
 FROM node:20-alpine AS builder
 
-WORKDIR /app
+WORKDIR /app/src
 
-COPY package.json package-lock.json ./
+# Install all dependencies
+COPY src/package.json src/package-lock.json ./
 RUN npm ci
 
-COPY . .
+# Copy source files
+COPY src/ ./
+
+# Build client (Vite) and server (tsc)
 RUN npm run build
 
 # ---- Production stage ----
@@ -20,10 +24,10 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 appgroup && \
     adduser --system --uid 1001 appuser
 
-COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/src/package.json /app/src/package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/src/dist ./dist
 
 USER appuser
 
