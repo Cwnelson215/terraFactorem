@@ -6,11 +6,14 @@ export default function Canvas2DView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mapData = useMapStore((s) => s.mapData);
 
-  // Pan/zoom state
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [zoom, setZoom] = useState(1);
+  // Pan/zoom state as refs to avoid re-renders during drag
+  const offset = useRef({ x: 0, y: 0 });
+  const zoom = useRef(1);
   const dragging = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
+
+  // Cursor state is the only thing that needs re-render
+  const [cursor, setCursor] = useState<"grab" | "grabbing">("grab");
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -42,14 +45,14 @@ export default function Canvas2DView() {
 
     // Center the map and apply pan/zoom
     const scale =
-      zoom * Math.min(canvas.width / width, canvas.height / height);
-    const cx = canvas.width / 2 + offset.x;
-    const cy = canvas.height / 2 + offset.y;
+      zoom.current * Math.min(canvas.width / width, canvas.height / height);
+    const cx = canvas.width / 2 + offset.current.x;
+    const cy = canvas.height / 2 + offset.current.y;
 
     ctx.setTransform(scale, 0, 0, scale, cx - (width * scale) / 2, cy - (height * scale) / 2);
     ctx.drawImage(tmp, 0, 0);
     ctx.resetTransform();
-  }, [mapData, offset, zoom]);
+  }, [mapData]);
 
   // Keep a stable ref to draw for the ResizeObserver
   const drawRef = useRef(draw);
@@ -80,38 +83,45 @@ export default function Canvas2DView() {
     if (!canvas) return;
     const handler = (e: WheelEvent) => {
       e.preventDefault();
-      setZoom((z) => Math.max(0.1, Math.min(10, z * (e.deltaY > 0 ? 0.9 : 1.1))));
+      zoom.current = Math.max(0.1, Math.min(10, zoom.current * (e.deltaY > 0 ? 0.9 : 1.1)));
+      draw();
     };
     canvas.addEventListener("wheel", handler, { passive: false });
     return () => canvas.removeEventListener("wheel", handler);
-  }, []);
+  }, [draw]);
 
+  // Attach mousemove/mouseup to window during drag
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     dragging.current = true;
     lastMouse.current = { x: e.clientX, y: e.clientY };
-  }, []);
+    setCursor("grabbing");
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!dragging.current) return;
-    setOffset((o) => ({
-      x: o.x + e.clientX - lastMouse.current.x,
-      y: o.y + e.clientY - lastMouse.current.y,
-    }));
-    lastMouse.current = { x: e.clientX, y: e.clientY };
-  }, []);
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!dragging.current) return;
+      offset.current = {
+        x: offset.current.x + e.clientX - lastMouse.current.x,
+        y: offset.current.y + e.clientY - lastMouse.current.y,
+      };
+      lastMouse.current = { x: e.clientX, y: e.clientY };
+      drawRef.current();
+    };
 
-  const handleMouseUp = useCallback(() => {
-    dragging.current = false;
+    const handleMouseUp = () => {
+      dragging.current = false;
+      setCursor("grab");
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{ display: "block", width: "100%", height: "100%", cursor: "grab" }}
+      style={{ display: "block", width: "100%", height: "100%", cursor }}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
     />
   );
 }
