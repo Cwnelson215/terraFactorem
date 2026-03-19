@@ -31,9 +31,6 @@ export default function Canvas2DView() {
       data[idx + 3] = 255;
     }
 
-    // Clear and apply transform
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
 
@@ -54,18 +51,28 @@ export default function Canvas2DView() {
     ctx.resetTransform();
   }, [mapData, offset, zoom]);
 
+  // Keep a stable ref to draw for the ResizeObserver
+  const drawRef = useRef(draw);
+  useEffect(() => {
+    drawRef.current = draw;
+  }, [draw]);
+
   useEffect(() => {
     draw();
   }, [draw]);
 
-  // Resize observer
+  // Resize observer — stable, does not depend on draw
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const observer = new ResizeObserver(() => draw());
+    const observer = new ResizeObserver(() => {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      drawRef.current();
+    });
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, [draw]);
+  }, []);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
@@ -93,7 +100,7 @@ export default function Canvas2DView() {
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: "100%", height: "100%", cursor: "grab" }}
+      style={{ display: "block", width: "100%", height: "100%", cursor: "grab" }}
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}

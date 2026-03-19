@@ -16,7 +16,7 @@ export default function App() {
         <Sidebar />
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <ViewToggle />
-          <div style={{ flex: 1, position: "relative" }}>
+          <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
             {viewMode === "2d" && <Canvas2DView />}
             {viewMode === "3d" && (
               <div
