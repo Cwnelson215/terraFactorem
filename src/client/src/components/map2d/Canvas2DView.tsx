@@ -74,9 +74,16 @@ export default function Canvas2DView() {
     return () => observer.disconnect();
   }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    setZoom((z) => Math.max(0.1, Math.min(10, z * (e.deltaY > 0 ? 0.9 : 1.1))));
+  // Attach non-passive wheel listener to avoid passive listener warnings
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handler = (e: WheelEvent) => {
+      e.preventDefault();
+      setZoom((z) => Math.max(0.1, Math.min(10, z * (e.deltaY > 0 ? 0.9 : 1.1))));
+    };
+    canvas.addEventListener("wheel", handler, { passive: false });
+    return () => canvas.removeEventListener("wheel", handler);
   }, []);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
@@ -101,7 +108,6 @@ export default function Canvas2DView() {
     <canvas
       ref={canvasRef}
       style={{ display: "block", width: "100%", height: "100%", cursor: "grab" }}
-      onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

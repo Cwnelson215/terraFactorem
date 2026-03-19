@@ -3,13 +3,9 @@
  * Returns a function that produces random numbers in [0, 1).
  */
 export default function alea(seed: number): () => number {
-  let s0 = mash(seed);
-  let s1 = mash(seed);
-  let s2 = mash(seed);
-  let c = 1;
+  let n = 0xefc8249d;
 
   function mash(data: number): number {
-    let n = 0xefc8249d;
     const str = data.toString();
     for (let i = 0; i < str.length; i++) {
       n += str.charCodeAt(i);
@@ -23,6 +19,11 @@ export default function alea(seed: number): () => number {
     }
     return (n >>> 0) * 2.3283064365386963e-10;
   }
+
+  let s0 = mash(seed);
+  let s1 = mash(seed);
+  let s2 = mash(seed);
+  let c = 1;
 
   return function () {
     const t = 2091639 * s0 + c * 2.3283064365386963e-10;
