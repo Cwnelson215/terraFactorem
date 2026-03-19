@@ -45,22 +45,24 @@ export default function GenerationPanel() {
         Generation
       </h3>
 
-      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <label style={{ fontSize: 12 }}>Seed</label>
-        <input
-          type="number"
-          value={params.seed}
-          onChange={(e) => setParams({ seed: parseInt(e.target.value) || 0 })}
-          style={{
-            flex: 1,
-            background: "#2a2a3e",
-            border: "1px solid #444",
-            color: "#e0e0e0",
-            borderRadius: 4,
-            padding: "4px 8px",
-            fontSize: 13,
-          }}
-        />
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <label style={{ fontSize: 12 }}>Seed</label>
+          <input
+            type="number"
+            value={params.seed}
+            onChange={(e) => setParams({ seed: parseInt(e.target.value) || 0 })}
+            style={{
+              flex: 1,
+              background: "#2a2a3e",
+              border: "1px solid #444",
+              color: "#e0e0e0",
+              borderRadius: 4,
+              padding: "4px 8px",
+              fontSize: 13,
+            }}
+          />
+        </div>
         <button
           onClick={randomizeSeed}
           style={{
@@ -71,6 +73,7 @@ export default function GenerationPanel() {
             padding: "4px 10px",
             cursor: "pointer",
             fontSize: 13,
+            width: "100%",
           }}
         >
           Random
